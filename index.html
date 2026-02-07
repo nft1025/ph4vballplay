@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volleyball Team Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --volleyball-orange: #FF6B35;
+            --volleyball-yellow: #FFA500;
+            --court-brown: #8B4513;
+            --net-white: #FFFFFF;
+            --court-blue: #1E90FF;
+            --dark-bg: #1a1a1a;
+            --darker-bg: #0d0d0d;
+            --card-bg: #2a2a2a;
+            --text-primary: #FFFFFF;
+            --text-secondary: #cccccc;
+            --success-green: #4CAF50;
+            --warning-red: #f44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            background-image: 
+                linear-gradient(45deg, rgba(255, 107, 53, 0.05) 25%, transparent 25%),
+                linear-gradient(-45deg, rgba(255, 107, 53, 0.05) 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, rgba(255, 107, 53, 0.05) 75%),
+                linear-gradient(-45deg, transparent 75%, rgba(255, 107, 53, 0.05) 75%);
+            background-size: 60px 60px;
+            background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--darker-bg) 0%, var(--dark-bg) 100%);
+            border-bottom: 4px solid var(--volleyball-orange);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .volleyball-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--volleyball-orange), var(--volleyball-yellow));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1 {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1.8rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--volleyball-orange) 0%, var(--volleyball-yellow) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.05em;
+            padding: 0.8rem 1.5rem;
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .nav-tab:hover {
+            background: var(--dark-bg);
+            border-color: var(--volleyball-orange);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--volleyball-orange), var(--volleyball-yellow));
+            color: var(--darker-bg);
+            border-color: var(--volleyball-orange);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--volleyball-orange);
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-left: 4px solid var(--volleyball-orange);
+            padding-left: 1rem;
+        }
+
+        /* Input Grid */
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .position-group {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .position-group:hover {
+            border-color: var(--volleyball-orange);
+            transform: translateY(-2px);
+        }
+
+        .position-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            color: var(--volleyball-yellow);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            background: var(--darker-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--volleyball-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            background: var(--darker-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--volleyball-orange);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 0.05em;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--volleyball-orange), var(--volleyball-yellow));
+            color: var(--darker-bg);
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 53, 0.6);
+        }
+
+        .btn-secondary {
+            background: var(--court-blue);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 144, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 144, 255, 0.5);
+        }
+
+        .btn-danger {
+            background: var(--warning-red);
+            color: white;
+        }
+
+        .btn-success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Team Display */
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .team-card {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 165, 0, 0.05));
+            border: 2px solid var(--volleyball-orange);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-header {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--volleyball-yellow);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .team-number {
+            background: var(--volleyball-orange);
+            color: var(--darker-bg);
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .player-list {
+            list-style: none;
+        }
+
+        .player-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 3px solid var(--volleyball-orange);
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .player-position {
+            font-family: 'Bebas Neue', sans-serif;
+            color: var(--volleyball-yellow);
+            font-size: 0.9rem;
+            min-width: 100px;
+        }
+
+        .player-name {
+            font-weight: 500;
+            flex: 1;
+        }
+
+        /* Match Control */
+        .match-card {
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .match-teams {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.5rem;
+            color: var(--volleyball-orange);
+        }
+
+        .score-input-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .score-input {
+            width: 80px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .vs-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        /* Standings Table */
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .standings-table th {
+            font-family: 'Bebas Neue', sans-serif;
+            background: linear-gradient(135deg, var(--volleyball-orange), var(--volleyball-yellow));
+            color: var(--darker-bg);
+            padding: 1rem;
+            text-align: left;
+            font-size: 1.1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .standings-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .standings-table tr:hover {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .rank-medal {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: 700;
+        }
+
+        .rank-1 { background: gold; color: #000; }
+        .rank-2 { background: silver; color: #000; }
+        .rank-3 { background: #cd7f32; color: #000; }
+
+        /* Attendance */
+        .attendance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .attendance-item {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 107, 53, 0.2);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .attendance-item:hover {
+            border-color: var(--volleyball-orange);
+        }
+
+        .attendance-item.paid {
+            border-color: var(--success-green);
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .player-info {
+            flex: 1;
+        }
+
+        .player-team {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Checkbox Styling */
+        .checkbox-wrapper {
+            position: relative;
+        }
+
+        input[type="checkbox"] {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--volleyball-orange);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--success-green);
+            border-color: var(--success-green);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* Messages */
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-weight: 500;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid var(--success-green);
+            color: var(--success-green);
+        }
+
+        .message.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid var(--warning-red);
+            color: var(--warning-red);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav-tabs {
+                width: 100%;
+            }
+
+            .nav-tab {
+                flex: 1;
+                text-align: center;
+                padding: 0.8rem 0.5rem;
+                font-size: 1rem;
+            }
+
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: var(--volleyball-orange);
+            font-size: 1.2rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <div class="volleyball-icon">🏐</div>
+                    <h1>Volleyball Team Manager</h1>
+                </div>
+                <nav class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchPage('teams')">Teams</button>
+                    <button class="nav-tab" onclick="switchPage('matches')">Matches</button>
+                    <button class="nav-tab" onclick="switchPage('standings')">Standings</button>
+                    <button class="nav-tab" onclick="switchPage('attendance')">Attendance</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="message-container"></div>
+
+            <!-- TEAMS PAGE -->
+            <div id="teams-page" class="page active">
+                <div class="card">
+                    <h2 class="card-title">⚡ Create Teams</h2>
+                    
+                    <div class="input-grid">
+                        <div class="position-group">
+                            <div class="position-label">Open Spiker 1</div>
+                            <textarea id="openSpiker1" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                        <div class="position-group">
+                            <div class="position-label">Open Spiker 2</div>
+                            <textarea id="openSpiker2" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                        <div class="position-group">
+                            <div class="position-label">Middle Blocker 1</div>
+                            <textarea id="middleBlocker1" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                        <div class="position-group">
+                            <div class="position-label">Middle Blocker 2</div>
+                            <textarea id="middleBlocker2" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                        <div class="position-group">
+                            <div class="position-label">Setter</div>
+                            <textarea id="setter" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                        <div class="position-group">
+                            <div class="position-label">Opposite Hitter</div>
+                            <textarea id="oppositeHitter" placeholder="Enter player names (one per line)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="randomizeTeams()">
+                            <span>🎲 Randomize Teams</span>
+                        </button>
+                        <button class="btn-secondary" onclick="saveToGoogleSheets()" id="saveBtn" disabled>
+                            <span>💾 Save to Google Sheets</span>
+                        </button>
+                        <button class="btn-danger" onclick="clearAll()">
+                            <span>🗑️ Clear All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="teams-display"></div>
+            </div>
+
+            <!-- MATCHES PAGE -->
+            <div id="matches-page" class="page">
+                <div class="card">
+                    <h2 class="card-title">🏆 Match Control</h2>
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="generateRoundRobin()">
+                            <span>Generate Round Robin Matches</span>
+                        </button>
+                        <button class="btn-secondary" onclick="saveMatchesToSheets()">
+                            <span>💾 Save Matches to Sheets</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="matches-display"></div>
+            </div>
+
+            <!-- STANDINGS PAGE -->
+            <div id="standings-page" class="page">
+                <div class="card">
+                    <h2 class="card-title">📊 Team Standings & Rankings</h2>
+                    <div id="standings-display"></div>
+                </div>
+            </div>
+
+            <!-- ATTENDANCE PAGE -->
+            <div id="attendance-page" class="page">
+                <div class="card">
+                    <h2 class="card-title">✅ Player Attendance & Payment</h2>
+                    <div class="btn-group">
+                        <button class="btn-secondary" onclick="saveAttendanceToSheets()">
+                            <span>💾 Save Attendance to Sheets</span>
+                        </button>
+                        <button class="btn-success" onclick="markAllPaid()">
+                            <span>✓ Mark All Paid</span>
+                        </button>
+                    </div>
+                    <div id="attendance-display" style="margin-top: 2rem;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Configuration
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7aASAv2TPbb20sS7_76uPcp0UxMs_8LuodTT2WNeM/dev';
+        
+        // App State
+        let currentTeams = [];
+        let matches = [];
+        let attendance = [];
+
+        // Page Navigation
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(pageName + '-page').classList.add('active');
+            event.target.classList.add('active');
+
+            // Update displays when switching pages
+            if (pageName === 'standings') updateStandings();
+            if (pageName === 'attendance') updateAttendance();
+        }
+
+        // Messages
+        function showMessage(text, isError = false) {
+            const container = document.getElementById('message-container');
+            const message = document.createElement('div');
+            message.className = `message ${isError ? 'error' : 'success'}`;
+            message.textContent = text;
+            container.innerHTML = '';
+            container.appendChild(message);
+            setTimeout(() => message.remove(), 5000);
+        }
+
+        // Get players from textarea
+        function getPlayers(elementId) {
+            const textarea = document.getElementById(elementId);
+            return textarea.value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+        }
+
+        // Shuffle array
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Randomize Teams with unequal distribution
+        function randomizeTeams() {
+            const positions = {
+                'Open Spiker 1': getPlayers('openSpiker1'),
+                'Open Spiker 2': getPlayers('openSpiker2'),
+                'Middle Blocker 1': getPlayers('middleBlocker1'),
+                'Middle Blocker 2': getPlayers('middleBlocker2'),
+                'Setter': getPlayers('setter'),
+                'Opposite Hitter': getPlayers('oppositeHitter')
+            };
+
+            // Validate
+            const allPlayers = Object.values(positions).flat();
+            if (allPlayers.length === 0) {
+                showMessage('Please add at least some players!', true);
+                return;
+            }
+
+            // Get max count to determine number of teams
+            const playerCounts = Object.values(positions).map(p => p.length);
+            const maxCount = Math.max(...playerCounts);
+            const numTeams = maxCount;
+
+            if (numTeams === 0) {
+                showMessage('Please add players to at least one position!', true);
+                return;
+            }
+
+            // Shuffle each position
+            const shuffledPositions = {};
+            for (const [position, players] of Object.entries(positions)) {
+                shuffledPositions[position] = shuffleArray(players);
+            }
+
+            // Create teams
+            currentTeams = [];
+            for (let i = 0; i < numTeams; i++) {
+                const team = {
+                    number: i + 1,
+                    players: {}
+                };
+
+                for (const [position, players] of Object.entries(shuffledPositions)) {
+                    // If this position has a player for this team, assign it
+                    if (i < players.length) {
+                        team.players[position] = players[i];
+                    } else {
+                        team.players[position] = null; // No player for this position
+                    }
+                }
+
+                currentTeams.push(team);
+            }
+
+            displayTeams();
+            document.getElementById('saveBtn').disabled = false;
+            showMessage(`Successfully created ${numTeams} team${numTeams > 1 ? 's' : ''}!`);
+        }
+
+        // Display Teams
+        function displayTeams() {
+            const display = document.getElementById('teams-display');
+            
+            if (currentTeams.length === 0) {
+                display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏐</div><p>No teams yet. Create teams to get started!</p></div>';
+                return;
+            }
+
+            let html = '<div class="teams-grid">';
+            
+            currentTeams.forEach(team => {
+                html += `
+                    <div class="team-card">
+                        <div class="team-header">
+                            <span class="team-number">${team.number}</span>
+                            Team ${team.number}
+                        </div>
+                        <ul class="player-list">
+                `;
+
+                Object.entries(team.players).forEach(([position, player]) => {
+                    if (player) {
+                        html += `
+                            <li class="player-item">
+                                <span class="player-position">${position}</span>
+                                <span class="player-name">${player}</span>
+                            </li>
+                        `;
+                    }
+                });
+
+                html += '</ul></div>';
+            });
+
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // Generate Round Robin Matches
+        function generateRoundRobin() {
+            if (currentTeams.length < 2) {
+                showMessage('You need at least 2 teams to generate matches!', true);
+                return;
+            }
+
+            matches = [];
+            let matchId = 1;
+
+            // Generate all possible matchups
+            for (let i = 0; i < currentTeams.length; i++) {
+                for (let j = i + 1; j < currentTeams.length; j++) {
+                    matches.push({
+                        id: matchId++,
+                        team1: currentTeams[i].number,
+                        team2: currentTeams[j].number,
+                        score1: 0,
+                        score2: 0,
+                        played: false
+                    });
+                }
+            }
+
+            displayMatches();
+            showMessage(`Generated ${matches.length} matches for round robin tournament!`);
+        }
+
+        // Display Matches
+        function displayMatches() {
+            const display = document.getElementById('matches-display');
+            
+            if (matches.length === 0) {
+                display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏆</div><p>No matches yet. Generate round robin matches first!</p></div>';
+                return;
+            }
+
+            let html = '';
+            
+            matches.forEach((match, index) => {
+                html += `
+                    <div class="match-card">
+                        <div class="match-header">
+                            <div class="match-teams">Match ${match.id}: Team ${match.team1} vs Team ${match.team2}</div>
+                            <div class="score-input-group">
+                                <input type="number" class="score-input" min="0" value="${match.score1}" 
+                                    onchange="updateScore(${index}, 1, this.value)">
+                                <span class="vs-label">-</span>
+                                <input type="number" class="score-input" min="0" value="${match.score2}"
+                                    onchange="updateScore(${index}, 2, this.value)">
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            display.innerHTML = html;
+        }
+
+        // Update Score
+        function updateScore(matchIndex, teamNum, score) {
+            matches[matchIndex][`score${teamNum}`] = parseInt(score) || 0;
+            matches[matchIndex].played = matches[matchIndex].score1 > 0 || matches[matchIndex].score2 > 0;
+            updateStandings();
+        }
+
+        // Update Standings
+        function updateStandings() {
+            const display = document.getElementById('standings-display');
+            
+            if (currentTeams.length === 0) {
+                display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📊</div><p>No teams yet. Create teams first!</p></div>';
+                return;
+            }
+
+            // Calculate standings
+            const standings = currentTeams.map(team => ({
+                team: team.number,
+                played: 0,
+                won: 0,
+                lost: 0,
+                points: 0,
+                scored: 0,
+                conceded: 0,
+                diff: 0
+            }));
+
+            matches.forEach(match => {
+                if (match.played) {
+                    const t1 = standings[match.team1 - 1];
+                    const t2 = standings[match.team2 - 1];
+                    
+                    t1.played++;
+                    t2.played++;
+                    t1.scored += match.score1;
+                    t1.conceded += match.score2;
+                    t2.scored += match.score2;
+                    t2.conceded += match.score1;
+                    
+                    if (match.score1 > match.score2) {
+                        t1.won++;
+                        t1.points += 3;
+                        t2.lost++;
+                    } else if (match.score2 > match.score1) {
+                        t2.won++;
+                        t2.points += 3;
+                        t1.lost++;
+                    } else {
+                        t1.points += 1;
+                        t2.points += 1;
+                    }
+                }
+            });
+
+            // Calculate diff
+            standings.forEach(s => s.diff = s.scored - s.conceded);
+
+            // Sort standings
+            standings.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.diff !== a.diff) return b.diff - a.diff;
+                return b.scored - a.scored;
+            });
+
+            // Display standings
+            let html = `
+                <table class="standings-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team</th>
+                            <th>Played</th>
+                            <th>Won</th>
+                            <th>Lost</th>
+                            <th>Points</th>
+                            <th>Scored</th>
+                            <th>Conceded</th>
+                            <th>Diff</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            standings.forEach((s, index) => {
+                const rank = index + 1;
+                let rankDisplay = rank;
+                if (rank === 1) rankDisplay = '<span class="rank-medal rank-1">1</span>';
+                else if (rank === 2) rankDisplay = '<span class="rank-medal rank-2">2</span>';
+                else if (rank === 3) rankDisplay = '<span class="rank-medal rank-3">3</span>';
+
+                html += `
+                    <tr>
+                        <td>${rankDisplay}</td>
+                        <td><strong>Team ${s.team}</strong></td>
+                        <td>${s.played}</td>
+                        <td>${s.won}</td>
+                        <td>${s.lost}</td>
+                        <td><strong>${s.points}</strong></td>
+                        <td>${s.scored}</td>
+                        <td>${s.conceded}</td>
+                        <td>${s.diff > 0 ? '+' : ''}${s.diff}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            display.innerHTML = html;
+        }
+
+        // Update Attendance
+        function updateAttendance() {
+            const display = document.getElementById('attendance-display');
+            
+            if (currentTeams.length === 0) {
+                display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>No teams yet. Create teams first!</p></div>';
+                return;
+            }
+
+            // Build attendance list only if empty (preserve existing data)
+            if (attendance.length === 0) {
+                currentTeams.forEach(team => {
+                    Object.entries(team.players).forEach(([position, player]) => {
+                        if (player) {
+                            const existing = attendance.find(a => a.name === player);
+                            if (!existing) {
+                                attendance.push({
+                                    name: player,
+                                    team: team.number,
+                                    position: position,
+                                    paid: false
+                                });
+                            }
+                        }
+                    });
+                });
+            }
+
+            displayAttendance();
+        }
+
+        // Display Attendance (separate from building the list)
+        function displayAttendance() {
+            const display = document.getElementById('attendance-display');
+            let html = '<div class="attendance-grid">';
+            
+            attendance.forEach((player, index) => {
+                html += `
+                    <div class="attendance-item ${player.paid ? 'paid' : ''}" id="attendance-${index}">
+                        <div class="player-info">
+                            <div class="player-name"><strong>${player.name}</strong></div>
+                            <div class="player-team">Team ${player.team} - ${player.position}</div>
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" ${player.paid ? 'checked' : ''} 
+                                onchange="togglePayment(${index})" id="checkbox-${index}">
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // Toggle Payment
+        function togglePayment(index) {
+            attendance[index].paid = !attendance[index].paid;
+            
+            // Update only the specific item instead of re-rendering everything
+            const item = document.getElementById(`attendance-${index}`);
+            const checkbox = document.getElementById(`checkbox-${index}`);
+            
+            if (attendance[index].paid) {
+                item.classList.add('paid');
+                checkbox.checked = true;
+            } else {
+                item.classList.remove('paid');
+                checkbox.checked = false;
+            }
+        }
+
+        // Mark All Paid
+        function markAllPaid() {
+            if (attendance.length === 0) {
+                showMessage('No attendance data yet. Go to Attendance tab after creating teams.', true);
+                return;
+            }
+            attendance.forEach(player => player.paid = true);
+            displayAttendance();
+            showMessage('All players marked as paid!');
+        }
+
+        // Save to Google Sheets
+        async function saveToGoogleSheets() {
+            if (currentTeams.length === 0) {
+                showMessage('No teams to save!', true);
+                return;
+            }
+
+            try {
+                const data = {
+                    action: 'saveTeams',
+                    timestamp: new Date().toISOString(),
+                    teams: currentTeams
+                };
+
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showMessage('Teams saved to Google Sheets!');
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error saving to Google Sheets', true);
+            }
+        }
+
+        // Save Matches to Sheets
+        async function saveMatchesToSheets() {
+            if (matches.length === 0) {
+                showMessage('No matches to save!', true);
+                return;
+            }
+
+            try {
+                const data = {
+                    action: 'saveMatches',
+                    timestamp: new Date().toISOString(),
+                    matches: matches
+                };
+
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showMessage('Matches saved to Google Sheets!');
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error saving matches', true);
+            }
+        }
+
+        // Save Attendance to Sheets
+        async function saveAttendanceToSheets() {
+            if (attendance.length === 0) {
+                showMessage('No attendance data to save!', true);
+                return;
+            }
+
+            try {
+                const data = {
+                    action: 'saveAttendance',
+                    timestamp: new Date().toISOString(),
+                    attendance: attendance
+                };
+
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                showMessage('Attendance saved to Google Sheets!');
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error saving attendance', true);
+            }
+        }
+
+        // Clear All
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                document.querySelectorAll('textarea').forEach(t => t.value = '');
+                currentTeams = [];
+                matches = [];
+                attendance = [];
+                displayTeams();
+                displayMatches();
+                updateStandings();
+                updateAttendance();
+                document.getElementById('saveBtn').disabled = true;
+                showMessage('All data cleared!');
+            }
+        }
+    </script>
+</body>
+</html>

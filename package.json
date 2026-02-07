@@ -1,0 +1,18 @@
+{
+  "name": "volleyball-team-manager",
+  "version": "1.0.0",
+  "description": "Volleyball Team Manager - Randomizer, Match Control, Standings & Attendance",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8000",
+    "build": "echo 'Static site - no build needed'"
+  },
+  "keywords": [
+    "volleyball",
+    "team-manager",
+    "sports",
+    "randomizer"
+  ],
+  "author": "",
+  "license": "MIT"
+}
