@@ -441,10 +441,17 @@
         }
 
         /* Standings Table */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 1rem;
+        }
+
         .standings-table {
             width: 100%;
+            min-width: 600px;
             border-collapse: collapse;
-            margin-top: 1rem;
         }
 
         .standings-table th {
@@ -455,11 +462,13 @@
             text-align: left;
             font-size: 1.1rem;
             letter-spacing: 0.05em;
+            white-space: nowrap;
         }
 
         .standings-table td {
             padding: 1rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            white-space: nowrap;
         }
 
         .standings-table tr:hover {
@@ -749,7 +758,7 @@
 
     <script>
         // Configuration
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7aASAv2TPbb20sS7_76uPcp0UxMs_8LuodTT2WNeM/dev';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzjbFyj3ALhdMrCg6O65zkEGdR3niy4njdkgPhIPPcDZkGCEqpuvnYxBg0cAihBh4XEA/exec';
         
         // App State
         let currentTeams = [];
@@ -1023,6 +1032,7 @@
 
             // Display standings
             let html = `
+                <div class="table-container">
                 <table class="standings-table">
                     <thead>
                         <tr>
@@ -1062,7 +1072,7 @@
                 `;
             });
 
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             display.innerHTML = html;
         }
 
