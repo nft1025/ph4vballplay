@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phase 4 Volleyball Club</title>
+    <title>Volleyball Team Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -737,6 +737,108 @@
         .history-restore-btn:hover {
             background: var(--volleyball-orange);
         }
+
+        /* Modal / End Game Menu */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 3px solid var(--volleyball-orange);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .modal-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: 2rem;
+            color: var(--volleyball-orange);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .modal-options {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-option {
+            background: rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-option:hover {
+            border-color: var(--volleyball-orange);
+            background: rgba(255, 107, 53, 0.1);
+            transform: translateX(5px);
+        }
+
+        .modal-option-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            color: var(--volleyball-yellow);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .modal-option-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .modal-close {
+            background: var(--text-secondary);
+            color: var(--dark-bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1rem;
+            width: 100%;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: var(--net-white);
+        }
     </style>
 </head>
 <body>
@@ -745,7 +847,7 @@
             <div class="header-content">
                 <div class="logo">
                     <div class="volleyball-icon">🏐</div>
-                    <h1>Phase 4 Volleyball Club</h1>
+                    <h1>Volleyball Team Manager</h1>
                 </div>
                 <nav class="nav-tabs">
                     <button class="nav-tab active" onclick="switchPage('teams')">Teams</button>
@@ -799,8 +901,8 @@
                         <button class="btn-secondary" onclick="saveToGoogleSheets()" id="saveBtn" disabled>
                             <span>💾 Save to Google Sheets</span>
                         </button>
-                        <button class="btn-danger" onclick="clearAll()">
-                            <span>🗑️ Clear All</span>
+                        <button class="btn-danger" onclick="showEndGameMenu()">
+                            <span>🏁 End Game / Clear Data</span>
                         </button>
                     </div>
                 </div>
@@ -838,11 +940,17 @@
                 <div class="card">
                     <h2 class="card-title">✅ Player Attendance & Payment</h2>
                     <div class="btn-group">
+                        <button class="btn-primary" onclick="refreshAttendance()">
+                            <span>🔄 Refresh Attendance List</span>
+                        </button>
                         <button class="btn-secondary" onclick="saveAttendanceToSheets()">
                             <span>💾 Save Attendance to Sheets</span>
                         </button>
                         <button class="btn-success" onclick="markAllPaid()">
                             <span>✓ Mark All Paid</span>
+                        </button>
+                        <button class="btn-danger" onclick="clearAllPayments()">
+                            <span>✗ Clear All Payments</span>
                         </button>
                     </div>
                     <div id="attendance-display" style="margin-top: 2rem;"></div>
@@ -865,6 +973,42 @@
                 </div>
             </div>
         </main>
+
+        <!-- End Game Modal -->
+        <div id="endGameModal" class="modal-overlay" onclick="closeEndGameMenu(event)">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <h2 class="modal-title">🏁 End Game Options</h2>
+                
+                <div class="modal-options">
+                    <div class="modal-option" onclick="clearScoresOnly()">
+                        <div class="modal-option-title">🔄 Clear Scores Only</div>
+                        <div class="modal-option-desc">Reset all match scores to 0. Keep teams and matches intact.</div>
+                    </div>
+
+                    <div class="modal-option" onclick="clearMatchesOnly()">
+                        <div class="modal-option-title">🏆 Clear Matches</div>
+                        <div class="modal-option-desc">Remove all matches and scores. Keep teams intact.</div>
+                    </div>
+
+                    <div class="modal-option" onclick="clearPaymentsOnly()">
+                        <div class="modal-option-title">💰 Clear Payments</div>
+                        <div class="modal-option-desc">Mark all players as unpaid. Keep everything else.</div>
+                    </div>
+
+                    <div class="modal-option" onclick="newGameKeepPlayers()">
+                        <div class="modal-option-title">🔀 New Game (Keep Players)</div>
+                        <div class="modal-option-desc">Clear teams, matches, and scores but keep player names in input fields.</div>
+                    </div>
+
+                    <div class="modal-option" onclick="clearEverything()">
+                        <div class="modal-option-title">🗑️ Clear Everything</div>
+                        <div class="modal-option-desc">⚠️ Delete all data including teams, matches, attendance, and history. Fresh start!</div>
+                    </div>
+                </div>
+
+                <button class="modal-close" onclick="closeEndGameMenu()">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1349,26 +1493,38 @@
                 return;
             }
 
-            // Build attendance list only if empty (preserve existing data)
-            if (attendance.length === 0) {
-                currentTeams.forEach(team => {
-                    Object.entries(team.players).forEach(([position, player]) => {
-                        if (player) {
-                            const existing = attendance.find(a => a.name === player);
-                            if (!existing) {
-                                attendance.push({
-                                    name: player,
-                                    team: team.number,
-                                    position: position,
-                                    paid: false
-                                });
-                            }
-                        }
-                    });
-                });
-            }
-
+            // Rebuild attendance list from current teams
+            rebuildAttendanceList();
             displayAttendance();
+        }
+
+        // Rebuild attendance list from current teams
+        function rebuildAttendanceList() {
+            // Create a map of existing paid status
+            const paidStatus = {};
+            attendance.forEach(a => {
+                paidStatus[a.name] = a.paid;
+            });
+
+            // Rebuild list from current teams
+            attendance = [];
+            currentTeams.forEach(team => {
+                Object.entries(team.players).forEach(([position, player]) => {
+                    if (player) {
+                        const existing = attendance.find(a => a.name === player);
+                        if (!existing) {
+                            attendance.push({
+                                name: player,
+                                team: team.number,
+                                position: position,
+                                paid: paidStatus[player] || false // Preserve paid status
+                            });
+                        }
+                    }
+                });
+            });
+
+            saveToLocalStorage();
         }
 
         // Display Attendance (separate from building the list)
@@ -1410,6 +1566,9 @@
                 item.classList.remove('paid');
                 checkbox.checked = false;
             }
+            
+            // Save to localStorage
+            saveToLocalStorage();
         }
 
         // Mark All Paid
@@ -1422,6 +1581,31 @@
             displayAttendance();
             saveToLocalStorage();
             showMessage('All players marked as paid!');
+        }
+
+        // Clear All Payments
+        function clearAllPayments() {
+            if (attendance.length === 0) {
+                showMessage('No attendance data yet.', true);
+                return;
+            }
+            if (confirm('Clear all payment statuses? This will mark everyone as unpaid.')) {
+                attendance.forEach(player => player.paid = false);
+                displayAttendance();
+                saveToLocalStorage();
+                showMessage('All payment statuses cleared!');
+            }
+        }
+
+        // Refresh Attendance List
+        function refreshAttendance() {
+            if (currentTeams.length === 0) {
+                showMessage('No teams created yet!', true);
+                return;
+            }
+            rebuildAttendanceList();
+            displayAttendance();
+            showMessage('Attendance list refreshed from current teams!');
         }
 
         // Display History
@@ -1621,24 +1805,155 @@
             }
         }
 
-        // Clear All
-        function clearAll() {
-            if (confirm('Are you sure you want to clear all data? This will also clear saved data from your browser.')) {
-                document.querySelectorAll('textarea').forEach(t => t.value = '');
+        // Show End Game Menu
+        function showEndGameMenu() {
+            document.getElementById('endGameModal').classList.add('active');
+        }
+
+        // Close End Game Menu
+        function closeEndGameMenu(event) {
+            if (!event || event.target.id === 'endGameModal') {
+                document.getElementById('endGameModal').classList.remove('active');
+            }
+        }
+
+        // Clear Scores Only
+        function clearScoresOnly() {
+            if (matches.length === 0) {
+                showMessage('No matches to clear!', true);
+                closeEndGameMenu();
+                return;
+            }
+
+            if (confirm('Clear all match scores? Teams and matches will remain.')) {
+                matches.forEach(match => {
+                    match.score1 = 0;
+                    match.score2 = 0;
+                    match.played = false;
+                });
+                
+                displayMatches();
+                updateStandings();
+                saveToLocalStorage();
+                
+                addToHistory('Scores Cleared', { numMatches: matches.length });
+                
+                closeEndGameMenu();
+                showMessage('All scores cleared! Matches reset to 0-0.');
+            }
+        }
+
+        // Clear Matches Only
+        function clearMatchesOnly() {
+            if (matches.length === 0) {
+                showMessage('No matches to clear!', true);
+                closeEndGameMenu();
+                return;
+            }
+
+            if (confirm('Delete all matches? Teams will remain intact.')) {
+                matches = [];
+                displayMatches();
+                updateStandings();
+                saveToLocalStorage();
+                
+                addToHistory('Matches Cleared', {});
+                
+                closeEndGameMenu();
+                showMessage('All matches deleted! Teams are still available.');
+            }
+        }
+
+        // Clear Payments Only
+        function clearPaymentsOnly() {
+            if (attendance.length === 0) {
+                showMessage('No attendance data!', true);
+                closeEndGameMenu();
+                return;
+            }
+
+            if (confirm('Mark all players as unpaid?')) {
+                attendance.forEach(player => player.paid = false);
+                displayAttendance();
+                saveToLocalStorage();
+                
+                closeEndGameMenu();
+                showMessage('All payment statuses cleared!');
+                
+                // Switch to attendance tab to show the change
+                if (document.querySelector('[onclick*="attendance"]')) {
+                    switchPage('attendance');
+                    document.querySelector('[onclick*="attendance"]').click();
+                }
+            }
+        }
+
+        // New Game - Keep Players
+        function newGameKeepPlayers() {
+            if (confirm('Start a new game? This will clear teams, matches, and attendance but keep player names in the input fields.')) {
+                // Keep the textarea values
+                // Just clear the generated data
                 currentTeams = [];
                 matches = [];
                 attendance = [];
+                
                 displayTeams();
                 displayMatches();
                 updateStandings();
                 updateAttendance();
                 document.getElementById('saveBtn').disabled = true;
                 
-                // Clear localStorage
-                localStorage.removeItem('volleyballManagerData');
+                saveToLocalStorage();
                 
-                showMessage('All data cleared!');
+                addToHistory('New Game Started', { keptPlayerNames: true });
+                
+                closeEndGameMenu();
+                showMessage('New game started! Player names preserved in input fields.');
+                
+                // Switch to teams tab
+                switchPage('teams');
+                document.querySelector('[onclick*="teams"]').click();
             }
+        }
+
+        // Clear Everything
+        function clearEverything() {
+            if (confirm('⚠️ DELETE EVERYTHING? This will erase:\n\n• All teams\n• All matches\n• All attendance records\n• All history\n• All player names\n• All saved data\n\nThis CANNOT be undone!')) {
+                // Double confirm for safety
+                if (confirm('Are you ABSOLUTELY SURE? This is your last chance!')) {
+                    // Clear all textareas
+                    document.querySelectorAll('textarea').forEach(t => t.value = '');
+                    
+                    // Clear all data
+                    currentTeams = [];
+                    matches = [];
+                    attendance = [];
+                    history = [];
+                    
+                    // Clear displays
+                    displayTeams();
+                    displayMatches();
+                    updateStandings();
+                    updateAttendance();
+                    displayHistory();
+                    document.getElementById('saveBtn').disabled = true;
+                    
+                    // Clear localStorage
+                    localStorage.removeItem('volleyballManagerData');
+                    
+                    closeEndGameMenu();
+                    showMessage('All data deleted! Starting fresh.');
+                    
+                    // Switch to teams tab
+                    switchPage('teams');
+                    document.querySelector('[onclick*="teams"]').click();
+                }
+            }
+        }
+
+        // Legacy clear all function (kept for compatibility)
+        function clearAll() {
+            showEndGameMenu();
         }
     </script>
 </body>
