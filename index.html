@@ -404,6 +404,37 @@
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1rem;
+            cursor: move;
+            user-select: none;
+            transition: all 0.3s ease;
+        }
+
+        .match-card:hover {
+            border-color: var(--volleyball-orange);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .match-card.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+
+        .match-card.drag-over {
+            border-style: dashed;
+            border-color: var(--volleyball-yellow);
+            background: rgba(255, 165, 0, 0.1);
+        }
+
+        .drag-handle {
+            display: inline-block;
+            margin-right: 0.5rem;
+            color: var(--volleyball-orange);
+            font-size: 1.2rem;
+            cursor: grab;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
         }
 
         .match-header {
@@ -643,6 +674,69 @@
             font-size: 4rem;
             margin-bottom: 1rem;
         }
+
+        /* History */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 4px solid var(--volleyball-orange);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            transform: translateX(5px);
+            border-color: var(--volleyball-yellow);
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .history-action {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: var(--volleyball-orange);
+            text-transform: uppercase;
+        }
+
+        .history-time {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .history-details {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .history-restore-btn {
+            background: var(--court-blue);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-restore-btn:hover {
+            background: var(--volleyball-orange);
+        }
     </style>
 </head>
 <body>
@@ -658,6 +752,7 @@
                     <button class="nav-tab" onclick="switchPage('matches')">Matches</button>
                     <button class="nav-tab" onclick="switchPage('standings')">Standings</button>
                     <button class="nav-tab" onclick="switchPage('attendance')">Attendance</button>
+                    <button class="nav-tab" onclick="switchPage('history')">History</button>
                 </nav>
             </div>
         </header>
@@ -753,17 +848,96 @@
                     <div id="attendance-display" style="margin-top: 2rem;"></div>
                 </div>
             </div>
+
+            <!-- HISTORY PAGE -->
+            <div id="history-page" class="page">
+                <div class="card">
+                    <h2 class="card-title">📜 Activity History</h2>
+                    <div class="btn-group">
+                        <button class="btn-danger" onclick="clearHistory()">
+                            <span>🗑️ Clear History</span>
+                        </button>
+                        <button class="btn-secondary" onclick="exportHistory()">
+                            <span>📥 Export History</span>
+                        </button>
+                    </div>
+                    <div id="history-display" style="margin-top: 2rem;"></div>
+                </div>
+            </div>
         </main>
     </div>
 
     <script>
         // Configuration
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyzjbFyj3ALhdMrCg6O65zkEGdR3niy4njdkgPhIPPcDZkGCEqpuvnYxBg0cAihBh4XEA/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7aASAv2TPbb20sS7_76uPcp0UxMs_8LuodTT2WNeM/dev';
         
         // App State
         let currentTeams = [];
         let matches = [];
         let attendance = [];
+        let history = [];
+
+        // Load data from localStorage on page load
+        window.addEventListener('load', function() {
+            loadDataFromLocalStorage();
+        });
+
+        // Save data to localStorage
+        function saveToLocalStorage() {
+            const data = {
+                teams: currentTeams,
+                matches: matches,
+                attendance: attendance,
+                history: history,
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem('volleyballManagerData', JSON.stringify(data));
+        }
+
+        // Load data from localStorage
+        function loadDataFromLocalStorage() {
+            const saved = localStorage.getItem('volleyballManagerData');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    currentTeams = data.teams || [];
+                    matches = data.matches || [];
+                    attendance = data.attendance || [];
+                    history = data.history || [];
+                    
+                    // Restore displays
+                    if (currentTeams.length > 0) {
+                        displayTeams();
+                        document.getElementById('saveBtn').disabled = false;
+                    }
+                    if (matches.length > 0) {
+                        displayMatches();
+                    }
+                    
+                    showMessage('Previous data restored from last session!');
+                } catch (error) {
+                    console.error('Error loading saved data:', error);
+                }
+            }
+        }
+
+        // Add to history
+        function addToHistory(action, data) {
+            const historyEntry = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                action: action,
+                data: data
+            };
+            history.unshift(historyEntry); // Add to beginning
+            
+            // Keep only last 50 entries
+            if (history.length > 50) {
+                history = history.slice(0, 50);
+            }
+            
+            saveToLocalStorage();
+        }
 
         // Page Navigation
         function switchPage(pageName) {
@@ -776,6 +950,7 @@
             // Update displays when switching pages
             if (pageName === 'standings') updateStandings();
             if (pageName === 'attendance') updateAttendance();
+            if (pageName === 'history') displayHistory();
         }
 
         // Messages
@@ -864,6 +1039,17 @@
 
             displayTeams();
             document.getElementById('saveBtn').disabled = false;
+            
+            // Add to history
+            addToHistory('Teams Created', {
+                numTeams: numTeams,
+                totalPlayers: allPlayers.length,
+                teams: currentTeams
+            });
+            
+            // Save to localStorage
+            saveToLocalStorage();
+            
             showMessage(`Successfully created ${numTeams} team${numTeams > 1 ? 's' : ''}!`);
         }
 
@@ -931,6 +1117,16 @@
             }
 
             displayMatches();
+            
+            // Add to history
+            addToHistory('Matches Generated', {
+                numMatches: matches.length,
+                numTeams: currentTeams.length
+            });
+            
+            // Save to localStorage
+            saveToLocalStorage();
+            
             showMessage(`Generated ${matches.length} matches for round robin tournament!`);
         }
 
@@ -947,9 +1143,16 @@
             
             matches.forEach((match, index) => {
                 html += `
-                    <div class="match-card">
+                    <div class="match-card" draggable="true" data-index="${index}" 
+                        ondragstart="handleDragStart(event)" 
+                        ondragover="handleDragOver(event)"
+                        ondrop="handleDrop(event)"
+                        ondragend="handleDragEnd(event)">
                         <div class="match-header">
-                            <div class="match-teams">Match ${match.id}: Team ${match.team1} vs Team ${match.team2}</div>
+                            <div class="match-teams">
+                                <span class="drag-handle">⋮⋮</span>
+                                Match ${match.id}: Team ${match.team1} vs Team ${match.team2}
+                            </div>
                             <div class="score-input-group">
                                 <input type="number" class="score-input" min="0" value="${match.score1}" 
                                     onchange="updateScore(${index}, 1, this.value)">
@@ -965,11 +1168,72 @@
             display.innerHTML = html;
         }
 
+        // Drag and Drop handlers for matches
+        let draggedElement = null;
+        let draggedIndex = null;
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            draggedIndex = parseInt(e.target.dataset.index);
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            const target = e.target.closest('.match-card');
+            if (target && target !== draggedElement) {
+                target.classList.add('drag-over');
+            }
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            const target = e.target.closest('.match-card');
+            if (target && target !== draggedElement) {
+                const targetIndex = parseInt(target.dataset.index);
+                
+                // Swap matches
+                const temp = matches[draggedIndex];
+                matches[draggedIndex] = matches[targetIndex];
+                matches[targetIndex] = temp;
+                
+                // Re-render
+                displayMatches();
+                
+                // Save state
+                saveToLocalStorage();
+                
+                showMessage('Match order updated!');
+            }
+
+            target.classList.remove('drag-over');
+            return false;
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            
+            // Remove all drag-over classes
+            document.querySelectorAll('.match-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+        }
+
         // Update Score
         function updateScore(matchIndex, teamNum, score) {
             matches[matchIndex][`score${teamNum}`] = parseInt(score) || 0;
             matches[matchIndex].played = matches[matchIndex].score1 > 0 || matches[matchIndex].score2 > 0;
             updateStandings();
+            saveToLocalStorage();
         }
 
         // Update Standings
@@ -1156,7 +1420,96 @@
             }
             attendance.forEach(player => player.paid = true);
             displayAttendance();
+            saveToLocalStorage();
             showMessage('All players marked as paid!');
+        }
+
+        // Display History
+        function displayHistory() {
+            const display = document.getElementById('history-display');
+            
+            if (history.length === 0) {
+                display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>No history yet. Actions will be recorded here.</p></div>';
+                return;
+            }
+
+            let html = '<div class="history-list">';
+            
+            history.forEach((entry, index) => {
+                const date = new Date(entry.timestamp);
+                const timeStr = date.toLocaleString();
+                
+                let details = '';
+                if (entry.action === 'Teams Created') {
+                    details = `Created ${entry.data.numTeams} teams with ${entry.data.totalPlayers} total players`;
+                } else if (entry.action === 'Matches Generated') {
+                    details = `Generated ${entry.data.numMatches} matches for ${entry.data.numTeams} teams`;
+                } else if (entry.action === 'Data Saved to Sheets') {
+                    details = `Saved ${entry.data.type} to Google Sheets`;
+                } else if (entry.action === 'Attendance Updated') {
+                    details = `Updated attendance for ${entry.data.numPlayers} players`;
+                }
+
+                html += `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <div class="history-action">${entry.action}</div>
+                            <div class="history-time">${timeStr}</div>
+                        </div>
+                        <div class="history-details">${details}</div>
+                        ${entry.data.teams ? `<button class="history-restore-btn" onclick="restoreFromHistory(${index})">↺ Restore This State</button>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // Restore from History
+        function restoreFromHistory(index) {
+            const entry = history[index];
+            
+            if (entry.data.teams) {
+                if (confirm('Restore teams from this history entry? This will replace current teams.')) {
+                    currentTeams = JSON.parse(JSON.stringify(entry.data.teams));
+                    displayTeams();
+                    document.getElementById('saveBtn').disabled = false;
+                    saveToLocalStorage();
+                    showMessage('Teams restored from history!');
+                    switchPage('teams');
+                    document.querySelector('[onclick="switchPage(\'teams\')"]').click();
+                }
+            }
+        }
+
+        // Clear History
+        function clearHistory() {
+            if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+                history = [];
+                saveToLocalStorage();
+                displayHistory();
+                showMessage('History cleared!');
+            }
+        }
+
+        // Export History
+        function exportHistory() {
+            if (history.length === 0) {
+                showMessage('No history to export!', true);
+                return;
+            }
+
+            const dataStr = JSON.stringify(history, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `volleyball-history-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('History exported successfully!');
         }
 
         // Save to Google Sheets
@@ -1180,6 +1533,9 @@
                     body: JSON.stringify(data)
                 });
 
+                // Add to history
+                addToHistory('Data Saved to Sheets', { type: 'Teams' });
+
                 showMessage('Teams saved to Google Sheets!');
             } catch (error) {
                 console.error('Error:', error);
@@ -1194,12 +1550,19 @@
                 return;
             }
 
+            console.log('Saving matches to Google Sheets...');
+            console.log('Number of matches:', matches.length);
+            console.log('Matches data:', matches);
+
             try {
                 const data = {
                     action: 'saveMatches',
                     timestamp: new Date().toISOString(),
                     matches: matches
                 };
+
+                console.log('Sending data:', data);
+                console.log('URL:', GOOGLE_SCRIPT_URL);
 
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -1208,10 +1571,14 @@
                     body: JSON.stringify(data)
                 });
 
-                showMessage('Matches saved to Google Sheets!');
+                // Add to history
+                addToHistory('Data Saved to Sheets', { type: 'Matches' });
+
+                showMessage('Matches saved to Google Sheets! Check your spreadsheet.');
+                console.log('Matches save request sent successfully');
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Error saving matches', true);
+                console.error('Error saving matches:', error);
+                showMessage('Error saving matches: ' + error.message, true);
             }
         }
 
@@ -1222,12 +1589,19 @@
                 return;
             }
 
+            console.log('Saving attendance to Google Sheets...');
+            console.log('Number of players:', attendance.length);
+            console.log('Attendance data:', attendance);
+
             try {
                 const data = {
                     action: 'saveAttendance',
                     timestamp: new Date().toISOString(),
                     attendance: attendance
                 };
+
+                console.log('Sending data:', data);
+                console.log('URL:', GOOGLE_SCRIPT_URL);
 
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -1236,16 +1610,20 @@
                     body: JSON.stringify(data)
                 });
 
-                showMessage('Attendance saved to Google Sheets!');
+                // Add to history
+                addToHistory('Data Saved to Sheets', { type: 'Attendance' });
+
+                showMessage('Attendance saved to Google Sheets! Check your spreadsheet.');
+                console.log('Attendance save request sent successfully');
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Error saving attendance', true);
+                console.error('Error saving attendance:', error);
+                showMessage('Error saving attendance: ' + error.message, true);
             }
         }
 
         // Clear All
         function clearAll() {
-            if (confirm('Are you sure you want to clear all data?')) {
+            if (confirm('Are you sure you want to clear all data? This will also clear saved data from your browser.')) {
                 document.querySelectorAll('textarea').forEach(t => t.value = '');
                 currentTeams = [];
                 matches = [];
@@ -1255,6 +1633,10 @@
                 updateStandings();
                 updateAttendance();
                 document.getElementById('saveBtn').disabled = true;
+                
+                // Clear localStorage
+                localStorage.removeItem('volleyballManagerData');
+                
                 showMessage('All data cleared!');
             }
         }
