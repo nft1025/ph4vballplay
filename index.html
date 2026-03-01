@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phase 4 Volleyball Club</title>
+    <title>PH4 Volleyball Club</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -839,6 +839,95 @@
         .modal-close:hover {
             background: var(--net-white);
         }
+
+        /* Team View Editable */
+        .team-view-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .editable-team-card {
+            background: linear-gradient(135deg, rgba(255, 107, 53, 0.15), rgba(255, 165, 0, 0.08));
+            border: 2px solid var(--volleyball-orange);
+            border-radius: 12px;
+            padding: 1.5rem;
+            position: relative;
+        }
+
+        .editable-player-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+            align-items: center;
+        }
+
+        .editable-player-position {
+            font-family: 'Bebas Neue', sans-serif;
+            color: var(--volleyball-yellow);
+            font-size: 0.9rem;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+
+        .editable-player-input {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            padding: 0.6rem;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .editable-player-input:focus {
+            outline: none;
+            border-color: var(--volleyball-orange);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.2);
+        }
+
+        .editable-player-input:empty {
+            background: rgba(139, 69, 19, 0.2);
+            border-color: rgba(139, 69, 19, 0.4);
+        }
+
+        .editable-player-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .view-mode-toggle {
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.25rem;
+            gap: 0.25rem;
+        }
+
+        .view-mode-btn {
+            font-family: 'Bebas Neue', sans-serif;
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            letter-spacing: 0.05em;
+        }
+
+        .view-mode-btn.active {
+            background: var(--volleyball-orange);
+            color: var(--darker-bg);
+        }
+
+        .view-mode-btn:hover:not(.active) {
+            background: rgba(255, 107, 53, 0.2);
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -847,7 +936,7 @@
             <div class="header-content">
                 <div class="logo">
                     <div class="volleyball-icon">🏐</div>
-                    <h1>Phase 4 Volleyball Club</h1>
+                    <h1>PH4 Volleyball Club </h1>
                 </div>
                 <nav class="nav-tabs">
                     <button class="nav-tab active" onclick="switchPage('teams')">Teams</button>
@@ -901,6 +990,9 @@
                         <button class="btn-secondary" onclick="saveToGoogleSheets()" id="saveBtn" disabled>
                             <span>💾 Save to Google Sheets</span>
                         </button>
+                        <button class="btn-secondary" onclick="openTeamView()" id="teamViewBtn" style="display: none;">
+                            <span>👥 Team View (Edit)</span>
+                        </button>
                         <button class="btn-danger" onclick="showEndGameMenu()">
                             <span>🏁 End Game / Clear Data</span>
                         </button>
@@ -908,6 +1000,24 @@
                 </div>
 
                 <div id="teams-display"></div>
+
+                <!-- Team View Mode (after teams are created) -->
+                <div id="team-view-container" style="display: none;">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                            <h2 class="card-title" style="margin: 0;">👥 Team View - Edit Players</h2>
+                            <div class="btn-group" style="margin: 0;">
+                                <button class="btn-primary" onclick="saveTeamViewChanges()">
+                                    <span>💾 Save Changes</span>
+                                </button>
+                                <button class="btn-secondary" onclick="closeTeamView()">
+                                    <span>← Back to Input</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="team-view-display"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- MATCHES PAGE -->
@@ -1203,8 +1313,12 @@
             
             if (currentTeams.length === 0) {
                 display.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏐</div><p>No teams yet. Create teams to get started!</p></div>';
+                document.getElementById('teamViewBtn').style.display = 'none';
                 return;
             }
+
+            // Show Team View button
+            document.getElementById('teamViewBtn').style.display = 'inline-block';
 
             let html = '<div class="teams-grid">';
             
@@ -1272,6 +1386,99 @@
             saveToLocalStorage();
             
             showMessage(`Generated ${matches.length} matches for round robin tournament!`);
+        }
+
+        // Open Team View
+        function openTeamView() {
+            if (currentTeams.length === 0) {
+                showMessage('No teams to view!', true);
+                return;
+            }
+
+            // Hide input section and regular display
+            document.querySelector('.input-grid').parentElement.style.display = 'none';
+            document.getElementById('teams-display').style.display = 'none';
+            
+            // Show team view
+            document.getElementById('team-view-container').style.display = 'block';
+            
+            displayTeamView();
+        }
+
+        // Close Team View
+        function closeTeamView() {
+            // Show input section and regular display
+            document.querySelector('.input-grid').parentElement.style.display = 'block';
+            document.getElementById('teams-display').style.display = 'block';
+            
+            // Hide team view
+            document.getElementById('team-view-container').style.display = 'none';
+        }
+
+        // Display Team View (Editable)
+        function displayTeamView() {
+            const display = document.getElementById('team-view-display');
+            
+            let html = '<div class="team-view-grid">';
+            
+            currentTeams.forEach((team, teamIndex) => {
+                html += `
+                    <div class="editable-team-card">
+                        <div class="team-header">
+                            <span class="team-number">${team.number}</span>
+                            Team ${team.number}
+                        </div>
+                        <div style="margin-top: 1rem;">
+                `;
+
+                Object.entries(team.players).forEach(([position, player]) => {
+                    html += `
+                        <div class="editable-player-item">
+                            <div class="editable-player-position">${position}</div>
+                            <input 
+                                type="text" 
+                                class="editable-player-input" 
+                                value="${player || ''}"
+                                placeholder="No player assigned"
+                                data-team="${teamIndex}"
+                                data-position="${position}"
+                                onchange="updateTeamPlayer(${teamIndex}, '${position}', this.value)"
+                            >
+                        </div>
+                    `;
+                });
+
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // Update Team Player (Real-time)
+        function updateTeamPlayer(teamIndex, position, newName) {
+            const cleanName = newName.trim();
+            currentTeams[teamIndex].players[position] = cleanName || null;
+            
+            // Auto-save
+            saveToLocalStorage();
+        }
+
+        // Save Team View Changes
+        function saveTeamViewChanges() {
+            // Rebuild attendance with updated names
+            rebuildAttendanceList();
+            
+            // Update regular display
+            displayTeams();
+            
+            // Add to history
+            addToHistory('Teams Edited', {
+                numTeams: currentTeams.length,
+                editedInView: true
+            });
+            
+            showMessage('Team changes saved! ✓');
         }
 
         // Display Matches
@@ -1703,12 +1910,20 @@
                 return;
             }
 
+            console.log('=== SAVING TEAMS TO GOOGLE SHEETS ===');
+            console.log('Number of teams:', currentTeams.length);
+            console.log('Teams data:', JSON.stringify(currentTeams, null, 2));
+
             try {
                 const data = {
                     action: 'saveTeams',
                     timestamp: new Date().toISOString(),
                     teams: currentTeams
                 };
+
+                console.log('Sending data:', JSON.stringify(data, null, 2));
+                console.log('URL:', GOOGLE_SCRIPT_URL);
+                console.log('⚠️ WARNING: Your URL ends with /dev - it should end with /exec');
 
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -1720,10 +1935,12 @@
                 // Add to history
                 addToHistory('Data Saved to Sheets', { type: 'Teams' });
 
-                showMessage('Teams saved to Google Sheets!');
+                showMessage('Teams saved to Google Sheets! Check your spreadsheet.');
+                console.log('✅ Teams save request sent successfully');
+                console.log('Note: Check your Google Sheet directly to verify the data was saved.');
             } catch (error) {
-                console.error('Error:', error);
-                showMessage('Error saving to Google Sheets', true);
+                console.error('❌ Error saving teams:', error);
+                showMessage('Error saving to Google Sheets: ' + error.message, true);
             }
         }
 
@@ -1734,9 +1951,9 @@
                 return;
             }
 
-            console.log('Saving matches to Google Sheets...');
+            console.log('=== SAVING MATCHES TO GOOGLE SHEETS ===');
             console.log('Number of matches:', matches.length);
-            console.log('Matches data:', matches);
+            console.log('Matches data:', JSON.stringify(matches, null, 2));
 
             try {
                 const data = {
@@ -1745,8 +1962,9 @@
                     matches: matches
                 };
 
-                console.log('Sending data:', data);
+                console.log('Sending data:', JSON.stringify(data, null, 2));
                 console.log('URL:', GOOGLE_SCRIPT_URL);
+                console.log('⚠️ WARNING: Your URL ends with /dev - it should end with /exec');
 
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -1759,9 +1977,10 @@
                 addToHistory('Data Saved to Sheets', { type: 'Matches' });
 
                 showMessage('Matches saved to Google Sheets! Check your spreadsheet.');
-                console.log('Matches save request sent successfully');
+                console.log('✅ Matches save request sent successfully');
+                console.log('Note: Check your Google Sheet directly to verify the data was saved.');
             } catch (error) {
-                console.error('Error saving matches:', error);
+                console.error('❌ Error saving matches:', error);
                 showMessage('Error saving matches: ' + error.message, true);
             }
         }
@@ -1773,9 +1992,9 @@
                 return;
             }
 
-            console.log('Saving attendance to Google Sheets...');
+            console.log('=== SAVING ATTENDANCE TO GOOGLE SHEETS ===');
             console.log('Number of players:', attendance.length);
-            console.log('Attendance data:', attendance);
+            console.log('Attendance data:', JSON.stringify(attendance, null, 2));
 
             try {
                 const data = {
@@ -1784,8 +2003,9 @@
                     attendance: attendance
                 };
 
-                console.log('Sending data:', data);
+                console.log('Sending data:', JSON.stringify(data, null, 2));
                 console.log('URL:', GOOGLE_SCRIPT_URL);
+                console.log('⚠️ WARNING: Your URL ends with /dev - it should end with /exec');
 
                 await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
@@ -1798,9 +2018,10 @@
                 addToHistory('Data Saved to Sheets', { type: 'Attendance' });
 
                 showMessage('Attendance saved to Google Sheets! Check your spreadsheet.');
-                console.log('Attendance save request sent successfully');
+                console.log('✅ Attendance save request sent successfully');
+                console.log('Note: Check your Google Sheet directly to verify the data was saved.');
             } catch (error) {
-                console.error('Error saving attendance:', error);
+                console.error('❌ Error saving attendance:', error);
                 showMessage('Error saving attendance: ' + error.message, true);
             }
         }
@@ -1897,6 +2118,12 @@
                 matches = [];
                 attendance = [];
                 
+                // Close team view if open
+                closeTeamView();
+                
+                // Hide team view button
+                document.getElementById('teamViewBtn').style.display = 'none';
+                
                 displayTeams();
                 displayMatches();
                 updateStandings();
@@ -1929,6 +2156,12 @@
                     matches = [];
                     attendance = [];
                     history = [];
+                    
+                    // Close team view if open
+                    closeTeamView();
+                    
+                    // Hide team view button
+                    document.getElementById('teamViewBtn').style.display = 'none';
                     
                     // Clear displays
                     displayTeams();
